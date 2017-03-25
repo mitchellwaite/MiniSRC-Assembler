@@ -32,6 +32,8 @@ namespace MiniSRC_ASM_CMD
             opcodeDictionary.Add("ori", "01111");
             opcodeDictionary.Add("mul", "10000");
             opcodeDictionary.Add("div", "10001");
+            opcodeDictionary.Add("neg", "10010");//
+            opcodeDictionary.Add("not", "10011");//
             opcodeDictionary.Add("brzr", "10100");
             opcodeDictionary.Add("brnz", "10100");
             opcodeDictionary.Add("brmi", "10100");
