@@ -1,14 +1,18 @@
 # ELEC374 MiniSRC Assembler / MIF Generator
 
-I wrote a simple assembler program for the mini SRC computer system which was part of the term length CPU design project in the [ELEC 374 course at Queen's University](http://my.ece.queensu.ca/Current-Students/Undergraduate/Course-Summaries/ELEC-374.html). It does not have support for any custom instructions, however if you clone this repository you can add them to the InstructionParser.cs pretty easily. It supports windows natively, but will probably run on any *nix systems (Mac, Linux, etc.) with the mono framework
+I wrote a simple assembler program for the mini SRC computer system which was part of the term length CPU design project in the [ELEC 374 course at Queen's University](http://my.ece.queensu.ca/Current-Students/Undergraduate/Course-Summaries/ELEC-374.html). It does not have support for any custom instructions, however if you clone this repository you can add them to the InstructionParser.cs pretty easily. It supports windows natively, but will probably run on any \*nix systems (Mac, Linux, etc.) with the mono framework
 
 !["Screenshot of the program"](https://raw.githubusercontent.com/mitchellwaite/MiniSRC-Assembler/master/Screenshot.png)
 
-#Downloads
+# MiniSRC 3-Bus CPU
+
+* [Download the VHDL files for the custom MiniSRC 3-Bus CPU Here](https://github.com/mitchellwaite/MiniSRC-CPU)
+
+# Downloads
 * [Download the minisrc assembler here](https://github.com/mitchellwaite/MiniSRC-Assembler/raw/master/MiniSRC_ASM/MiniSRC_ASM_CMD/bin/Debug/minisrc_asm.exe)
 * [Download the MiniSRC ISA spec here](https://github.com/mitchellwaite/MiniSRC-Assembler/raw/master/CPU_Spec.pdf)
 
-#How to run
+# How to run
 
 Windows: minisrc_asm.exe [file] [output] [size] [options]
 
@@ -31,7 +35,7 @@ Mac/Linux *(you must install the mono framework)*: mono minisrc_asm.exe [file] [
 
 If any warnings occur, the program may *still* attempt to generate a MIF. The program will probably not crash, but do be aware that *your MIF file may be bad*.
 
-#Assembly Syntax Improvements
+# Assembly Syntax Improvements
 
 -Specifying a subroutine is done on its own line, using an @ symbol. *Never place this directly before an ORG directive.* Currently subroutines can't be called directly, but this doesn't matter since the instruction set doesn't support it. If you want to extend the instruction set in that way, a table is created in FileParser in which you can use to make a second pass over the assembly file.
 
