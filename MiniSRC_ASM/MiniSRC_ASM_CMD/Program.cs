@@ -98,7 +98,7 @@ namespace MiniSRC_ASM_CMD
                 catch(Exception ex)
                 {
                     StringBuilder s = new StringBuilder();
-                    s.AppendFormat("There was an error processing the assembly file.\n\nError: {0}\nMessage: {1}", ex.GetType().ToString(), ex.Message);
+                    s.AppendFormat("There was an error processing the assembly file.\n\nError: {0}\nMessage: {1}\nStack: {2}\n", ex.GetType().ToString(), ex.Message, ex.StackTrace);
                     Console.Error.Write(s);
                 }
             }

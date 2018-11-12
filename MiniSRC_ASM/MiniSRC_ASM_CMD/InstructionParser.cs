@@ -68,24 +68,31 @@ namespace MiniSRC_ASM_CMD
                     throw new ArgumentException("Invalid Register: " + rx);
                 }
             }
-            catch(Exception ex)
+            catch
             {
                 throw new ArgumentException("Invalid Register: " + rx);
             }
 
         }
 
-        public string ParseInstruction(string inst)
+        public SRCInstruction ParseInstruction(string inst)
         {
+            SRCInstruction tmpInst = new SRCInstruction();
+            tmpInst.originalInstructionString = inst;
+            tmpInst.outputInstructionString = "";
+            tmpInst.replaceImmediateWithAddress = false;
+
             string instruction = inst.ToLower();
 
             if(instruction == "nop")
             {
-                return "D8000000"; //opcode for NOP
+                tmpInst.outputInstructionString = "D8000000";
+                return tmpInst; //opcode for NOP
             }
             else if(instruction == "halt")
             {
-                return "E0000000"; //opcode for HALT!
+                tmpInst.outputInstructionString = "E0000000"; //opcode for HALT!
+                return tmpInst;
             }
             else //not a single word no operand instruction
             {
@@ -118,6 +125,7 @@ namespace MiniSRC_ASM_CMD
 
                                 Regex idx = new Regex(@"(([rR][0-9]*),\s*[$|0x|0X|-]*[0-9]+\(([rR][0-9]+)\))\s*");
                                 Regex reg = new Regex(@"([rR][0-9]*),\s*[$|0x|0X|-]*[0-9]+\s*");
+                                Regex sub = new Regex(@"([rR][0-9]*),\s*[\@][a-zA-Z0-9]+\s*"); //will match an @ declaration.... this should be good
 
                                 if(idx.IsMatch(regString))
                                 {
@@ -161,7 +169,8 @@ namespace MiniSRC_ASM_CMD
 
                                     s.AppendFormat("{0}", c_sx_string);
 
-                                    return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    return tmpInst;
                                 }
                                 else if(reg.IsMatch(regString))
                                 {
@@ -201,7 +210,16 @@ namespace MiniSRC_ASM_CMD
 
                                     s.AppendFormat("{0}", c_sx_string);
 
-                                    return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    return tmpInst;
+                                }
+                                else if(sub.IsMatch(regString))
+                                {
+                                    //we're matching a subroutine. save this for later.
+                                    string[] dirString = regString.Split(',');
+                                    tmpInst.immediateToReplace = dirString[1];
+                                    tmpInst.replaceImmediateWithAddress = true;
+                                    return tmpInst;
                                 }
                                 else
                                 {
@@ -272,7 +290,8 @@ namespace MiniSRC_ASM_CMD
 
                                     s.AppendFormat("{0}", c_sx_string);
 
-                                    return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    return tmpInst;
                                 }
                                 else if (reg.IsMatch(regString))
                                 {
@@ -313,7 +332,8 @@ namespace MiniSRC_ASM_CMD
 
                                     s.AppendFormat("{0}", c_sx_string);
 
-                                    return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                    return tmpInst;
                                 }
                                 else
                                 {
@@ -379,7 +399,8 @@ namespace MiniSRC_ASM_CMD
 
                                 s.AppendFormat("{0}", c_sx_string);
 
-                                return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                return tmpInst;
                             }
                         case "str":
                             {
@@ -436,7 +457,8 @@ namespace MiniSRC_ASM_CMD
 
                                 s.AppendFormat("{0}", c_sx_string);
 
-                                return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                return tmpInst;
                             }
                         //operation,register instructions
                         case "jal":
@@ -452,7 +474,8 @@ namespace MiniSRC_ASM_CMD
                                 }
 
                                 s.Append(RxToBin(wsplit[1]));
-                                return Convert.ToUInt32(s.ToString().PadRight(32, '0'), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString().PadRight(32, '0'), 2).ToString("X");
+                                return tmpInst;
                             }
                         //operation, three registers, no immediate value
                         case "add":
@@ -486,7 +509,8 @@ namespace MiniSRC_ASM_CMD
 
                                 s.AppendFormat("{0}{1}{2}", RxToBin(FileParser.TrimWhiteSpace(regString[0])), RxToBin(FileParser.TrimWhiteSpace(regString[1])), RxToBin(FileParser.TrimWhiteSpace(regString[2])));
 
-                                return Convert.ToUInt32(s.ToString().PadRight(32,'0'), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString().PadRight(32,'0'), 2).ToString("X");
+                                return tmpInst;
                             }
                         //operation, two registers, immediate value
                         case "addi":
@@ -549,7 +573,8 @@ namespace MiniSRC_ASM_CMD
 
                                 s.AppendFormat("{0}", c_sx_string);
 
-                                return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                return tmpInst;
                             }
                         //operation, two registers, nothing else
                         case "not":
@@ -575,7 +600,8 @@ namespace MiniSRC_ASM_CMD
 
                                 s.AppendFormat("{0}{1}", RxToBin(FileParser.TrimWhiteSpace(regString[0])), RxToBin(FileParser.TrimWhiteSpace(regString[1])));
 
-                                return Convert.ToUInt32(s.ToString().PadRight(32, '0'), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString().PadRight(32, '0'), 2).ToString("X");
+                                return tmpInst;
                             }
 
                         //branches
@@ -606,7 +632,8 @@ namespace MiniSRC_ASM_CMD
 
                                 s.Append(branchSuffix[wsplit[0]]);
 
-                                return Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                tmpInst.outputInstructionString = Convert.ToUInt32(s.ToString(), 2).ToString("X");
+                                return tmpInst;
                             }
                         default:
                             {

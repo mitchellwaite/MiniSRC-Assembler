@@ -19,6 +19,8 @@ namespace MiniSRC_ASM_CMD
             InstructionParser iParse = new InstructionParser();
             Dictionary<string, int> SubroutineTable = new Dictionary<string, int>();
 
+            List<SRCInstruction> instructionsToReparse = new List<SRCInstruction>();
+
             List<String> outList = new List<string>();
 
             int memoryLocation = 0;
@@ -89,7 +91,7 @@ namespace MiniSRC_ASM_CMD
                 }
                 else if (trimmed.StartsWith("@"))//subroutine
                 {
-                    SubroutineTable.Add(trimmed.Remove(0, 1), memoryLocation);
+                    SubroutineTable.Add(trimmed, memoryLocation);
 
                     fpx.Add(new FileParserException("Subroutine Found at location " + String.Format("{0:X}",memoryLocation) + " '" + trimmed + "'", i,2));
 
@@ -145,9 +147,22 @@ namespace MiniSRC_ASM_CMD
                     //intsruction! Yay!
                     try
                     {
-                        string tmpResult = iParse.ParseInstruction(trimmed).PadLeft(8,'0');
+                        SRCInstruction outputInst = iParse.ParseInstruction(trimmed);
                         StringBuilder s = new StringBuilder();
-                        s.AppendFormat("{0} : {1};", String.Format("{0:X}", memoryLocation++),tmpResult);
+
+                        if (outputInst.replaceImmediateWithAddress)
+                        {
+                            //... do this
+                            instructionsToReparse.Add(outputInst);
+                            int instructionIdx = instructionsToReparse.Count - 1;
+                            s.AppendFormat("{0} : REPARSEINSTRUCTION_{1};", String.Format("{0:X}", memoryLocation++), instructionIdx);
+                        }
+                        else
+                        {
+                            string tmpResult = outputInst.outputInstructionString.PadLeft(8, '0');
+                            s.AppendFormat("{0} : {1};", String.Format("{0:X}", memoryLocation++), tmpResult);
+                        }
+
                         result = s.ToString();
                         outList.Add(result);
                     }
@@ -161,6 +176,35 @@ namespace MiniSRC_ASM_CMD
             }
 
             //return outList;
+            //loop thru outList and find the memory locations to replace....
+            for(int i = 0;i<outList.Count;i++)
+            {
+                if(outList[i].Contains("REPARSEINSTRUCTION"))
+                {
+                    //we gotta reparse this shit!
+                    string reparseMarker = outList[i].Split(':')[1].Trim(' ').Trim(';');
+                    int reparseIdx = Convert.ToInt32(reparseMarker.Split('_')[1]);
+
+                    SRCInstruction reparseInst = instructionsToReparse[reparseIdx];
+
+                    try
+                    {
+                        string replacementMemoryLocation = "0x" + SubroutineTable[reparseInst.immediateToReplace].ToString("X");
+                        string replacementInstruction = reparseInst.originalInstructionString.Replace(reparseInst.immediateToReplace, replacementMemoryLocation);
+                        
+                        SRCInstruction newInstruction = iParse.ParseInstruction(replacementInstruction);
+                        string tmpResult = newInstruction.outputInstructionString.PadLeft(8, '0');
+
+                        outList[i] = outList[i].Replace(reparseMarker, tmpResult);
+                    }
+                    catch(Exception ex)
+                    {
+                        fpx.Add(new FileParserException("Error parsing instruction (2nd pass)'" + outList[i] + "' : " + ex.Message, i, 0));
+                    }
+
+
+                }
+            }
 
             int pow = 0;
 
